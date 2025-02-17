@@ -1,4 +1,4 @@
-name: CI
+name: CIgfhfgfh
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -129,14 +129,36 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Xcode Command Line Tools
+        run: |
+          xcode-select --install || true
+
+      - name: Check C++ Compiler
+        run: |
+          c++ --version
+
+      - name: Install Dependencies
+        run: |
+           brew install openssl
+           brew install cmake
+
+
+
       - uses: pnpm/action-setup@v4
+
+      # - name: Setup node
+      #   uses: actions/setup-node@v4
+      #   if: ${{ !matrix.docker }}
+      #   with:
+      #     node-version: 20
+      #     cache: pnpm
 
       - name: Setup node
         uses: actions/setup-node@v4
-        if: ${{ !matrix.docker }}
         with:
           node-version: 20
           cache: pnpm
+
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -175,7 +197,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
+        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }} --verbose
 
       - name: Build (Windows)
         if: ${{ matrix.platform == 'windows' }}
