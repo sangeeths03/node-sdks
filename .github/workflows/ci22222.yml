@@ -1,4 +1,4 @@
-name: CI222222222
+name: CI
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -143,27 +143,41 @@ jobs:
             packages/livekit-rtc/target/
           key: ${{ matrix.target }}-cargo-${{ matrix.os }}
 
-      - name: Install macOS dependencies (for aarch64-apple-darwin)
-        if: ${{ matrix.target == 'aarch64-apple-darwin' }}
-        run: |
-          brew install llvm clang
-          rustup target add aarch64-apple-darwin
-          rustup default stable
-          xcode-select --install
-          brew install openssl libtool automake pkg-config
-
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build (macOS aarch64)
+      - name: Install macOS dependencies (for aarch64-apple-darwin)
+        if: ${{ matrix.target == 'aarch64-apple-darwin' }}
+        run: |
+          # Ensure the Xcode Command Line Tools are installed
+          xcode-select --install || echo "Command Line Tools already installed"
+          rustup target add aarch64-apple-darwin
+          rustup default stable
+          brew install openssl libtool automake pkg-config
+
+      - name: Build (Linux)
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.build_image }} bash -c "\
+            uname -a; \
+            export PATH=/root/.cargo/bin:\$PATH; \
+            export RUST_BACKTRACE=full; \
+            yum install openssl-devel libX11-devel mesa-libGL-devel libXext-devel clang-devel -y; \
+            curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -; \
+            yum install -y nodejs --setopt=nodesource-nodejs.module_hotfixes=1; \
+            npm install --global pnpm && pnpm install; \
+            cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}"
+
+      - name: Build (macOS)
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: |
-          cd packages/livekit-rtc
-          set +e
-          pnpm build --target ${{ matrix.target }} || echo "Build failed"
-          set -e
+        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
+
+      - name: Build (Windows)
+        if: ${{ matrix.platform == 'windows' }}
+        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
