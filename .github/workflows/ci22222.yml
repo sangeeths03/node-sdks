@@ -1,7 +1,7 @@
-name: CI teststststs
+name: CIdhjckdwhgfcwdkufhdewlhvcdkvhcr
 env:
   APP_NAME: rtc-node
-  MACOSX_DEPLOYMENT_TARGET: '11.0'  # Ensure this matches the SDK you are using
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_TERM_COLOR: always
 
 on:
@@ -101,29 +101,26 @@ jobs:
         include:
           - os: macos-14-large
             platform: macos
-            target: x86_64-apple-darwin
-            macosx_deployment_target: '11.0'  # Update to match the correct target
-          - os: macos-14
-            platform: macos
             target: aarch64-apple-darwin
-            macosx_deployment_target: '11.0'
-
+            macosx_deployment_target: '11.0'  # Updated deployment target version
     name: stable - ${{ matrix.target }} - node@20
     runs-on: ${{ matrix.os }}
     env:
       RUST_BACKTRACE: full
-      CXXFLAGS: '-std=c++11'  # Add this line to force C++20 standard
+      CXXFLAGS: "-v"  # Enable verbose C++ output
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
     needs: check-changes
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - uses: pnpm/action-setup@v4
+
+      - name: Setup Rust toolchain
+        run: rustup target add aarch64-apple-darwin  # Ensure the Rust target is available
 
       - name: Setup node
         uses: actions/setup-node@v4
-        if: ${{ !matrix.docker }}
         with:
           node-version: 20
           cache: pnpm
@@ -147,11 +144,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build (macOS)
+      - name: Build (macOS ARM)
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
+        run: cd packages/livekit-rtc && pnpm build --target aarch64-apple-darwin
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -193,4 +190,26 @@ jobs:
         working-directory: packages/livekit-rtc
 
       - name: List packages
-        run: ls -R ./packages
+        run: ls -R ./packages/livekit-rtc/npm
+        shell: bash
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm ci:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build Server SDK Docs
+        if: steps.changesets.outputs.published == 'true'
+        run: pnpm --filter=livekit-server-sdk build-docs
+
+      - name: S3 Upload Server SDK Docs
+        if: steps.changesets.outputs.published == 'true'
+        run: aws s3 cp packages/livekit-server-sdk/docs/ s3://livekit-docs/server-sdk-js --recursive
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_DEPLOY_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_DEPLOY_AWS_API_SECRET }}
+          AWS_DEFAULT_REGION: 'us-east-1'
