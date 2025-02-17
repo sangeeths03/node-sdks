@@ -166,7 +166,7 @@ jobs:
       - name: Install system dependencies (macOS)
         if: ${{ matrix.platform == 'macos' }}
         run: |
-          brew install openssl libx11 clang
+          brew install openssl libx11
 
       - name: Install system dependencies (Linux)
         if: ${{ matrix.platform == 'linux' }}
