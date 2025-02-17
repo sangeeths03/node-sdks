@@ -112,6 +112,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       RUST_BACKTRACE: full
+      CXXFLAGS: '-std=c++20'  # Add this line to force C++20 standard
     needs: check-changes
     steps:
       - uses: actions/checkout@v4
