@@ -1,4 +1,4 @@
-name: CIvvvvvbvvv
+name: CIcvcvcxxxxxx
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -163,7 +163,9 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }} --verbose
+        run: |
+          cd packages/livekit-rtc
+          pnpm build --platform --release --dts native.d.ts --js native.cjs --pipe "prettier -w" src/napi --target aarch64-apple-darwin --verbose
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
