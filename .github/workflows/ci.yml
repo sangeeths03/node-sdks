@@ -1,4 +1,4 @@
-name: CIgfhfgfh
+name: CIvvvvvbvvv
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -107,17 +107,6 @@ jobs:
             platform: macos
             target: aarch64-apple-darwin
             macosx_deployment_target: '11.0'
-          # - os: windows-2019
-          #   platform: windows
-          #   target: x86_64-pc-windows-msvc
-          # - os: ubuntu-20.04
-          #   platform: linux
-          #   target: x86_64-unknown-linux-gnu
-          #   build_image: quay.io/pypa/manylinux_2_28_x86_64
-          # - os: namespace-profile-default-arm64
-          #   platform: linux
-          #   target: aarch64-unknown-linux-gnu
-          #   build_image: quay.io/pypa/manylinux_2_28_aarch64
 
     name: stable - ${{ matrix.target }} - node@20
     runs-on: ${{ matrix.os }}
@@ -139,26 +128,17 @@ jobs:
 
       - name: Install Dependencies
         run: |
-           brew install openssl
-           brew install cmake
-
-
+          brew install openssl
+          brew install cmake
 
       - uses: pnpm/action-setup@v4
 
-      # - name: Setup node
-      #   uses: actions/setup-node@v4
-      #   if: ${{ !matrix.docker }}
-      #   with:
-      #     node-version: 20
-      #     cache: pnpm
-
       - name: Setup node
         uses: actions/setup-node@v4
+        if: ${{ !matrix.docker }}
         with:
           node-version: 20
           cache: pnpm
-
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -179,29 +159,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build (Linux)
-        if: ${{ matrix.platform == 'linux' }}
-        run: |
-          docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.build_image }} bash -c "\
-            uname -a; \
-            export PATH=/root/.cargo/bin:\$PATH; \
-            export RUST_BACKTRACE=full; \
-            yum install openssl-devel libX11-devel mesa-libGL-devel libXext-devel clang-devel -y; \
-            curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
-            curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -; \
-            yum install -y nodejs --setopt=nodesource-nodejs.module_hotfixes=1; \
-            npm install --global pnpm && pnpm install; \
-            cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}"
-
       - name: Build (macOS)
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
         run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }} --verbose
-
-      - name: Build (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
