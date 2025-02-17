@@ -1,4 +1,4 @@
-name: CI2323232
+name: CI23232323
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -150,7 +150,7 @@ jobs:
       - name: Install macOS dependencies
         if: ${{ matrix.platform == 'macos' }}
         run: |
-          brew install llvm clang
+          brew install llvm
           brew install libomp
           sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
           sudo xcodebuild -runFirstLaunch
