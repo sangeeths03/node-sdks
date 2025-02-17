@@ -1,4 +1,4 @@
-name: CI232323
+name: CI
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -157,9 +157,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Install Xcode command line tools (macOS only)
-        if: runner.os == 'macOS'
-        run: xcode-select --install
+      - name: Ensure Xcode command line tools are installed (macOS)
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          xcode-select --install || echo "Xcode command line tools are already installed."
+          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Install system dependencies (macOS)
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          brew install openssl libx11 clang
+
+      - name: Install system dependencies (Linux)
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libx11-dev clang
 
       - name: Build (Linux)
         if: ${{ matrix.platform == 'linux' }}
@@ -179,9 +192,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: |
-          brew install openssl
-          cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
+        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
 
       - name: Build (Windows)
         if: ${{ matrix.platform == 'windows' }}
