@@ -1,7 +1,7 @@
-name: CI23232323
+name: CI teststststs
 env:
   APP_NAME: rtc-node
-  MACOSX_DEPLOYMENT_TARGET: '10.13'
+  MACOSX_DEPLOYMENT_TARGET: '11.0'  # Ensure this matches the SDK you are using
   CARGO_TERM_COLOR: always
 
 on:
@@ -102,7 +102,7 @@ jobs:
           - os: macos-14-large
             platform: macos
             target: x86_64-apple-darwin
-            macosx_deployment_target: '10.15'
+            macosx_deployment_target: '11.0'  # Update to match the correct target
           - os: macos-14
             platform: macos
             target: aarch64-apple-darwin
@@ -146,37 +146,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # Install necessary dependencies for macOS
-      - name: Install macOS dependencies
-        if: ${{ matrix.platform == 'macos' }}
-        run: |
-          brew install llvm
-          brew install libomp
-          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-          sudo xcodebuild -runFirstLaunch
-
-      - name: Build (Linux)
-        if: ${{ matrix.platform == 'linux' }}
-        run: |
-          docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.build_image }} bash -c "\
-            uname -a; \
-            export PATH=/root/.cargo/bin:\$PATH; \
-            export RUST_BACKTRACE=full; \
-            yum install openssl-devel libX11-devel mesa-libGL-devel libXext-devel clang-devel -y; \
-            curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
-            curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -; \
-            yum install -y nodejs --setopt=nodesource-nodejs.module_hotfixes=1; \
-            npm install --global pnpm && pnpm install; \
-            cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}"
-
       - name: Build (macOS)
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
-
-      - name: Build (Windows)
-        if: ${{ matrix.platform == 'windows' }}
         run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
 
       - name: Upload artifact
@@ -219,26 +192,4 @@ jobs:
         working-directory: packages/livekit-rtc
 
       - name: List packages
-        run: ls -R ./packages/livekit-rtc/npm
-        shell: bash
-
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm ci:publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Build Server SDK Docs
-        if: steps.changesets.outputs.published == 'true'
-        run: pnpm --filter=livekit-server-sdk build-docs
-
-      - name: S3 Upload Server SDK Docs
-        if: steps.changesets.outputs.published == 'true'
-        run: aws s3 cp packages/livekit-server-sdk/docs/ s3://livekit-docs/server-sdk-js --recursive
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.DOCS_DEPLOY_AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.DOCS_DEPLOY_AWS_API_SECRET }}
-          AWS_DEFAULT_REGION: 'us-east-1'
+        run: ls -R ./packages
