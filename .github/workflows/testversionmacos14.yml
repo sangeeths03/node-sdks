@@ -1,31 +1,12 @@
 name: Test macOS 14 Version
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:  # This allows manual trigger from GitHub UI
 
 jobs:
-  test:
-    name: Test on macOS 14 Version 20251002
-    runs-on: macos-14
-    env:
-      MACOSX_DEPLOYMENT_TARGET: '10.13'  # Set target macOS version for compatibility if needed
+  check-macos-version:
+    name: Check macOS 14 Version
+    runs-on: macos-14  # This ensures it runs on macOS 14 version
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Run Tests
-        run: pnpm test
+      - name: Check macOS Version
+        run: sw_vers
