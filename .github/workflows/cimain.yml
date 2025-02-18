@@ -42,7 +42,6 @@ jobs:
         run: |
           echo "rtc_build=${{ steps.paths.outputs.livekit-rtc == 'true' || github.ref == 'refs/heads/main' }}" >> $GITHUB_OUTPUT
           echo "server_sdk_build=${{ steps.paths.outputs.server-sdk == 'true' || github.ref == 'refs/heads/main' }}" >> $GITHUB_OUTPUT
-
   lint:
     name: Formatting
     runs-on: ubuntu-latest
@@ -170,7 +169,6 @@ jobs:
             yum install -y nodejs --setopt=nodesource-nodejs.module_hotfixes=1; \
             npm install --global pnpm && pnpm install; \
             cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}"
-
       - name: Build (macOS)
         if: ${{ matrix.platform == 'macos' }}
         env:
