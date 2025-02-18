@@ -1,4 +1,4 @@
-name: depencheck
+name: CIdepcghchc
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -118,46 +118,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Xcode Command Line Tools
-        run: |
-          xcode-select --install || true
-
-      - name: Check Xcode Command Line Tools Version
-        run: |
-          xcode-select -p
-
-      - name: Check C++ Compiler Version
-        run: |
-          c++ --version
-
-      - name: Install Dependencies
-        run: |
-          brew install openssl cmake libuv ffmpeg gstreamer  # Add any other dependencies your project needs
-
-      - name: Check OpenSSL Version
-        run: |
-          openssl version
-
-      - name: Check CMake Version
-        run: |
-          cmake --version
-
-      - name: Check libuv Version
-        run: |
-          brew info libuv
-
-      - name: Check Boost Version (if applicable)
-        run: |
-          brew info boost
-
-      - name: Check FFmpeg Version (if applicable)
-        run: |
-          ffmpeg -version
-
-      - name: Check GStreamer Version (if applicable)
-        run: |
-          gst-launch-1.0 --version
-
       - uses: pnpm/action-setup@v4
 
       - name: Setup node
@@ -183,6 +143,30 @@ jobs:
             packages/livekit-rtc/target/
           key: ${{ matrix.target }}-cargo-${{ matrix.os }}
 
+      - name: Check Versions of macOS Build Tools and Dependencies
+        run: |
+          # Check if Xcode Command Line Tools are installed (clang, make, etc.)
+          xcode-select --version || echo "Xcode Command Line Tools not installed"
+          
+          # Check C++ compiler version
+          c++ --version || echo "C++ compiler (clang++) not found"
+          
+          # Check macOS version
+          echo "macOS Version: $(sw_vers -productVersion)"
+          
+          # Check Node.js version
+          node -v
+          
+          # Check pnpm version
+          pnpm -v
+          
+          # Check Rust version
+          rustc --version
+          cargo --version
+          
+          # Check the version of the Rust toolchain (in case there are mismatches)
+          rustup show active-toolchain
+
       - name: Install dependencies
         run: pnpm install
 
@@ -190,9 +174,7 @@ jobs:
         if: ${{ matrix.platform == 'macos' }}
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macosx_deployment_target }}
-        run: |
-          cd packages/livekit-rtc
-          pnpm build --platform --release --dts native.d.ts --js native.cjs --pipe "prettier -w" --target aarch64-apple-darwin .
+        run: cd packages/livekit-rtc && pnpm build --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
