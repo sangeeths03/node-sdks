@@ -102,7 +102,7 @@ jobs:
           #   platform: macos
           #   target: x86_64-apple-darwin
           #   macosx_deployment_target: '10.15'
-          - os: macos-14
+          - os: macos-latest-large
             platform: macos
             target: aarch64-apple-darwin
             macosx_deployment_target: '11.0'
