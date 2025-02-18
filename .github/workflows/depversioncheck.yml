@@ -1,4 +1,4 @@
-name: dependencyversion
+name: depencheck
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
@@ -132,7 +132,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          brew install openssl cmake libyuv  # Add any other dependencies your project needs
+          brew install openssl cmake libuv ffmpeg gstreamer  # Add any other dependencies your project needs
 
       - name: Check OpenSSL Version
         run: |
@@ -142,9 +142,9 @@ jobs:
         run: |
           cmake --version
 
-      - name: Check libyuv Version
+      - name: Check libuv Version
         run: |
-          brew info libyuv
+          brew info libuv
 
       - name: Check Boost Version (if applicable)
         run: |
