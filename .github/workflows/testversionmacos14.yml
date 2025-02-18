@@ -1,12 +1,26 @@
-name: Test macOS 14 Version
+name: Check macOS 14 Version
 
 on:
-  workflow_dispatch:  # This allows manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
-  check-macos-version:
+  check-version:
     name: Check macOS 14 Version
-    runs-on: macos-14  # This ensures it runs on macOS 14 version
+    runs-on: macos-14
+    strategy:
+      matrix:
+        platform: [macos]
+        target: [aarch64-apple-darwin]
+        macosx_deployment_target: ['11.0']
     steps:
-      - name: Check macOS Version
-        run: sw_vers
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display macOS version
+        run: |
+          echo "macOS Version: $(sw_vers -productVersion)"
+          echo "Deployment Target: ${{ matrix.macosx_deployment_target }}"
+          
+      - name: Verify architecture
+        run: |
+          uname -m  # To verify the architecture (should show arm64 for macOS on Apple Silicon)
