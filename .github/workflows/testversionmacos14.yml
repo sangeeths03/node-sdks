@@ -1,4 +1,4 @@
-name: Check macOS 14 Version
+name: Check macOS Version (Strictly macOS 14)
 
 on:
   workflow_dispatch:
@@ -14,7 +14,12 @@ jobs:
       - name: Display macOS version
         run: |
           echo "macOS Version: $(sw_vers -productVersion)"
-          
-      - name: Verify architecture
+        
+      - name: Check architecture
         run: |
-          uname -m  # To verify the architecture, should show either x86_64 or arm64
+          ARCHITECTURE=$(uname -m)
+          echo "Architecture is: $ARCHITECTURE"
+          if [[ "$ARCHITECTURE" == "arm64" ]]; then
+            echo "This is macOS 14 ARM architecture, exiting...";
+            exit 1;
+          fi
