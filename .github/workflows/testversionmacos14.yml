@@ -7,11 +7,6 @@ jobs:
   check-version:
     name: Check macOS 14 Version
     runs-on: macos-14
-    strategy:
-      matrix:
-        platform: [macos]
-        target: [aarch64-apple-darwin]
-        macosx_deployment_target: ['11.0']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,8 +14,7 @@ jobs:
       - name: Display macOS version
         run: |
           echo "macOS Version: $(sw_vers -productVersion)"
-          echo "Deployment Target: ${{ matrix.macosx_deployment_target }}"
           
       - name: Verify architecture
         run: |
-          uname -m  # To verify the architecture (should show arm64 for macOS on Apple Silicon)
+          uname -m  # To verify the architecture, should show either x86_64 or arm64
