@@ -167,6 +167,19 @@ jobs:
           # Check the version of the Rust toolchain (in case there are mismatches)
           rustup show active-toolchain
 
+      - name: Check Clang Version
+        run: |
+          # If you're using Homebrew's version, explicitly use the Homebrew binary
+          if which clang; then
+            echo "Using system clang: $(clang --version)"
+          else
+            echo "Clang not found!"
+          fi
+          if which /opt/homebrew/bin/clang; then
+            echo "Using Homebrew clang: $(/opt/homebrew/bin/clang --version)"
+          fi
+
+
       - name: Install dependencies
         run: pnpm install
 
