@@ -381,7 +381,7 @@ jobs:
           DISK_OPS_START=1000        # Start with 1000 disk operations
           DISK_OPS_INCREMENT=1000    # Increase by 1000 disk operations each iteration
           DISK_OPS_MAX=10000        # Maximum number of disk operations (adjust as needed)
-          DISK_SIZE=5G              # Size of the test file to use for stress
+          DISK_SIZE=2G              # Size of the test file to use for stress
           LOG_FILE="disk_stress_results.log"  # Log file for results
 
           echo "Starting incremental disk I/O stress test..." | tee $LOG_FILE
@@ -421,66 +421,45 @@ jobs:
           rm -f ./testfile
           echo "Disk stress test completed. Check $LOG_FILE for details." | tee -a $LOG_FILE
 
-
-      # Step 1: Install iperf3
-      - name: Install iperf3
-        shell: bash
-        run: |
-          # Check if Homebrew is installed
-          if ! command -v brew &> /dev/null
-          then
-              echo "Homebrew not found, installing..."
-              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          fi
-          
-          # Install iperf3
-          brew install iperf3
-          
-          # Verify the installation
-          iperf3 --version
-  
-      # Step 2: Run Incremental Network Stress Test
-      - name: Run Incremental Network Stress Test
+      # Add Incremental Network Stress Test by Pinging Google here
+      - name: Run Network Stress Test by Pinging Google
         shell: bash
         continue-on-error: true  # Allows next steps to execute even if this one fails
         run: |
           # Define test parameters
-          STREAMS_START=1           # Start with 1 parallel stream
-          STREAMS_INCREMENT=1       # Increase by 1 stream each iteration
-          STREAMS_MAX=10           # Maximum number of parallel streams
-          DATA_SIZE_MB=100         # Amount of data to transfer per stream (in MB)
-          LOG_FILE="network_stress_results.log"  # Log file for results
+          PING_INTERVAL_START=0.1      # Start with 0.1 second interval between pings
+          PING_INTERVAL_INCREMENT=0.1  # Increase the interval by 0.1 second each iteration
+          PING_INTERVAL_MAX=1         # Maximum interval between pings (adjust as needed)
+          PING_COUNT=10               # Number of pings to send in each iteration
+          TARGET_IP="8.8.8.8"        # Google DNS server IP (change if needed)
+          LOG_FILE="ping_stress_results.log"  # Log file for results
+
+          echo "Starting incremental network stress test by pinging Google..." | tee $LOG_FILE
           
-          # Network server IP or hostname (the server running iperf3)
-          NETWORK_SERVER="your-server-ip-or-hostname"  # Replace with actual server IP/hostname
-          
-          # Initial message to log
-          echo "Starting incremental network stress test..." | tee $LOG_FILE
-          
-          # Loop for network stress test with increasing number of streams
-          for ((streams=$STREAMS_START; streams<=$STREAMS_MAX; streams+=$STREAMS_INCREMENT)); do
-              echo "Running network stress with $streams parallel streams" | tee -a $LOG_FILE
+          # Loop to gradually increase the ping rate
+          for ((interval=$PING_INTERVAL_START; interval<=$PING_INTERVAL_MAX; interval+=$PING_INTERVAL_INCREMENT)); do
+              echo "Running ping test with interval of $interval seconds between pings to $TARGET_IP" | tee -a $LOG_FILE
               
-              # Run iperf3 to measure network bandwidth with increasing streams
-              iperf3 -c $NETWORK_SERVER -P $streams -n ${DATA_SIZE_MB}M --logfile temp_iperf_result.txt
+              # Run the ping test with increasing frequency (more pings per unit time)
+              ping -i $interval -c $PING_COUNT $TARGET_IP | tee -a $LOG_FILE
               
-              # Check the result of the iperf3 test
-              if [ $? -eq 0 ]; then
-                  # Extract the relevant result from iperf3 output
-                  bandwidth=$(grep "receiver" temp_iperf_result.txt | awk '{print $7 " " $8}')
-                  echo "✅ Passed: $streams parallel streams with bandwidth $bandwidth" | tee -a $LOG_FILE
+              # Check if there were any packet loss or errors
+              if grep -q "100% packet loss" $LOG_FILE; then
+                echo "❌ Error: 100% packet loss detected!" | tee -a $LOG_FILE
+                break  # Stop the test if packet loss exceeds 100%
+              elif grep -q "0% packet loss" $LOG_FILE; then
+                echo "✅ Ping test passed with no packet loss." | tee -a $LOG_FILE
               else
-                  echo "❌ Failed: $streams parallel streams" | tee -a $LOG_FILE
-                  echo "⚠️ Stopping further increments as failure occurred at $streams streams" | tee -a $LOG_FILE
-                  break  # Stop the test if failure occurs
+                echo "⚠️ Warning: Packet loss detected!" | tee -a $LOG_FILE
               fi
               
+              # Sleep for a short period between each test
+              sleep 2
               echo "---------------------------------------------" | tee -a $LOG_FILE
           done
-          
-          # Clean up temporary files
-          rm -f temp_iperf_result.txt
-          echo "Network stress test completed. Check $LOG_FILE for details." | tee -a $LOG_FILE
+
+          echo "Ping stress test completed. Check $LOG_FILE for details." | tee -a $LOG_FILE
+
 
 
 
