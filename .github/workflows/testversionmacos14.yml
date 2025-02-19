@@ -6,7 +6,7 @@ on:
 jobs:
   check-version:
     name: Check macOS 14 Version
-    runs-on: macos-14-large
+    runs-on: macos-latest-large
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
