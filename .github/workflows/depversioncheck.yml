@@ -150,6 +150,19 @@ jobs:
           
           # Check C++ compiler version
           c++ --version || echo "C++ compiler (clang++) not found"
+
+          #check xcode version
+          xcodebuild -version
+
+          #command line tool xcode
+          xcode-select --version
+
+          #clang version
+          clang --version
+
+          #homebrew call
+          brew info llvm
+
           
           # Check macOS version
           echo "macOS Version: $(sw_vers -productVersion)"
