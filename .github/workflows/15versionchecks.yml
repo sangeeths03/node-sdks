@@ -1,4 +1,4 @@
-name: CI
+name: CI15test
 env:
   APP_NAME: rtc-node
   MACOSX_DEPLOYMENT_TARGET: '10.13'
